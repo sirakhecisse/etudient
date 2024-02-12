@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SB-SMS</title>
+    <link rel="icon" href="/img/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
+    <link type="text/css" rel="stylesheet" href="/css/style.css" />
+    <script src="/js/index.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+      integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Nunito+Sans:300i,400,700&amp;display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      window.addEventListener("load", () => {
+        updateCheckboxes()
+      })
+
+      function updateCheckboxes() {
+        const checkboxes = document.querySelectorAll(
+          '#dropdown-options input[type="checkbox"]'
+        )
+
+        checkboxes.forEach(checkbox => {
+          const columnName = checkbox.name
+          const columnHeader = document.getElementById(`${columnName}-data`)
+          if (columnHeader) {
+            checkbox.checked = true
+          } else {
+            checkbox.checked = false
+          }
+        })
+      }
+
+      async function applySettings() {
+        const checkboxes = document.querySelectorAll(
+          '#dropdown-options input[type="checkbox"]'
+        )
+
+        const selectedColumns = Array.from(checkboxes)
+          .filter(checkbox => checkbox.checked)
+          .map(checkbox => checkbox.name)
+
+        const toShow = "?columns=" + selectedColumns.join(",")
+
+        window.location.href = `/dashboard${toShow}`
+      }
+
+      let input, toSearch
+      async function searchAndDisplay() {
+        input = document.getElementById("searchInput")
+        toSearch = input.value.trim().toLowerCase()
+
+        if (toSearch) {
+          let apiUrl = `/api/v1/students?search=${toSearch}`
+
+          try {
+            const response = await fetch(apiUrl)
+            const students = await response.json()
+            let tableElement = document.querySelector("table")
+            let tbody = tableElement.querySelector("tbody")
+            const paginationElement = document.getElementById("pagination")
+            tbody.innerHTML = ""
+
+            students.forEach(student => {
+              const row = document.createElement("tr")
+
+              const columns = [
+                {
+                  class: "text-center py-5 pl-4 pr-3 text-sm sm:pl-0",
+                  content: student.studentId,
+                },
+                {
+                  class: "px-3 py-5 text-sm text-gray-500",
+                  content: `<div class="h-11 w-11 flex-shrink-0 mx-auto">${
+                    student.imageurl
+                      ? `<img src="${student.imageurl}thumb" width="40" class="rounded-full" />`
+                      : '<img src="/img/null.png" width="40" class="mx-auto" />'
+                  }</div>`,
+                },
+                {
+                  class: "text-center px-3 py-5 text-sm text-gray-500",
+                  content: `<div class="text-gray-900">${student.class}</div>`,
+                },
+                {
+                  class: "text-center px-3 py-5 text-sm text-gray-500",
+                  content: `<div class="text-gray-900">${student.firstname}</div>`,
+                },
+                {
+                  class: "text-center px-3 py-5 text-sm text-gray-500",
+                  content: `<div class="text-gray-900">${student.lastname}</div>`,
+                },
+                {
+                  class: "text-center py-5 text-sm text-gray-500",
+                  content: `<div class="text-gray-900">${student.email}</div>`,
+                },
+                {
+                  class: "text-center px-3 py-5 text-sm text-gray-500",
+                  content: `<div class="text-gray-900">${new Date(
+                    student.birthdate
+                  ).toLocaleDateString("en-GB")}</div>`,
+                },
+                {
+                  class:
+                    "relative whitespace-nowrap py-5 pr-4 ml-8 mx-auto text-sm font-medium sm:pr-0 space-x-4",
+                  content: `<a href="/dashboard/view/${student.studentId}" class="text-indigo-600 hover:text-indigo-900"><i class="fa-solid fa-eye" style="color: #3940fe"></i></a><a href="/dashboard/update/${student.studentId}" class="text-indigo-600 hover:text-indigo-900"><i class="fa-solid fa-pen-to-square" style="color: #01c632"></i></a><button onclick="deleteUser('${student.studentId}')" class="text-indigo-600 hover:text-indigo-900"><i class="fa-sharp fa-solid fa-trash" style="color: #ff0000"></i></button>`,
+                },
+              ]
+
+              columns.forEach(column => {
+                const cell = document.createElement("td")
+                cell.className = column.class
+                cell.innerHTML = column.content
+                row.appendChild(cell)
+              })
+
+              tbody.appendChild(row)
+
+              tableElement.appendChild(tbody)
+              paginationElement.style.display = "none"
+            })
+          } catch (error) {
+            console.error("Error fetching filtered data:", error)
+          }
+        }
+      }
+
+      function handleKeyPress(event) {
+        const loader = document.getElementById("pre-loader")
+
+        if (event.key === "Enter") {
+          loader.style.display = "block"
+          main.classList.add("blur")
+          searchAndDisplay().then(() => {
+            loader.style.display = "none"
+            main.classList.remove("blur")
+          })
+        }
+      }
+
+      async function deleteUser(sid, privil) {
+        if (privil === "false") {
+          alert("Cannot perform this action!")
+          return
+        } else if (privil === "true") {
+          const confirmed = confirm(
+            "Are you sure you want to delete this Student?"
+          )
+          const loader = document.getElementById("pre-loader")
+
+          if (confirmed) {
+            loader.style.display = "block"
+            main.classList.add("blur")
+            try {
+              const response = await fetch(`/dashboard/delete/${sid}`, {
+                method: "PATCH",
+              })
+
+              if (response.ok) {
+                window.location.reload()
+              }
+            } catch (error) {}
+          }
+        }
+      }
+
+      function editUser(sid, privil) {
+        if (privil === "false") {
+          alert("Cannot perform this action!")
+          return
+        } else if (privil === "true") {
+          window.location.href = "/dashboard/update/" + sid
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const loader = document.getElementById("pre-loader")
+        const main = document.getElementById("main")
+        const overlay = document.getElementById("overlay")
+
+        window.addEventListener("beforeunload", () => {
+          loader.style.display = "block"
+          main.classList.add("blur")
+        })
+
+        window.addEventListener("load", () => {
+          loader.style.display = "none"
+          main.classList.remove("blur")
+        })
+        document
+          .getElementById("menu-button")
+          .addEventListener("click", function () {
+            const dropdownOptions = document.getElementById("dropdown-options")
+            dropdownOptions.classList.toggle("hidden")
+          })
+      })
+    </script>
+  </head>
+  <body>
+    <%- include('include/_navbar.ejs') %>
+    <div
+      id="pre-loader"
+      class="absolute hidden top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50"
+    >
+      <div class="lds-spinner">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    <div id="main" class="mx-20 mt-10">
+      <div class="">
+        <div class="sm:flex sm:items-center mt-3">
+          <div class="flex justify-start items-between">
+            <div class="item1">
+              <div class="flex justify-start my-autop-4">
+                <div class="relative mt-">
+                  <div
+                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                  >
+                    <svg
+                      class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                      fill="currentColor"
+                      viewbox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                        clip-rule="evenodd"
+                      ></path>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    id="searchInput"
+                    onkeydown="handleKeyPress(event)"
+                    class="bg-gray-50 border rounded-md border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-80 pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    placeholder="Type and press ENTER..."
+                  />
+                </div>
+                <a
+                  href="/dashboard"
+                  class="h-8 my-auto text-center w-16 rounded-md font-semibold text-white bg-indigo-600 ml-3 flex items-center justify-center"
+                >
+                  Reset
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end ml-auto mb-2 mr-1 z-10" id="show-fields">
+            <div class="relative text-left">
+              <button
+                type="button"
+                class="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                id="menu-button"
+                aria-haspopup="true"
+              >
+                Show
+                <svg
+                  class="-mr-1 h-5 w-5 text-gray-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              <div
+                class="origin-top-right absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-gray-200 ring-1 ring-black divide-y divide-gray-100 hidden"
+                role="menu"
+                aria-orientation="vertical"
+                aria-labelledby="menu-button"
+                tabindex="-1"
+                id="dropdown-options"
+              >
+                <label
+                  class="block px-4 py-2 text-sm font-medium text-gray-700"
+                >
+                  <input type="checkbox" name="id" class="form-checkbox" />
+                  ID
+                </label>
+
+                <label
+                  class="block px-4 py-2 text-sm font-medium text-gray-700"
+                >
+                  <input
+                    type="checkbox"
+                    name="firstname"
+                    class="form-checkbox"
+                  />
+                  FIRSTNAME
+                </label>
+                <label
+                  class="block px-4 py-2 text-sm font-medium text-gray-700"
+                >
+                  <input
+                    type="checkbox"
+                    name="lastname"
+                    class="form-checkbox"
+                  />
+                  LASTNAME
+                </label>
+                <label
+                  class="block px-4 py-2 text-sm font-medium text-gray-700"
+                >
+                  <input type="checkbox" name="class" class="form-checkbox" />
+                  CLASS
+                </label>
+                <label
+                  class="block px-4 py-2 text-sm font-medium text-gray-700"
+                >
+                  <input type="checkbox" name="email" class="form-checkbox" />
+                  EMAIL
+                </label>
+                <label
+                  class="block px-4 py-2 text-sm font-medium text-gray-700"
+                >
+                  <input
+                    name="birthdate"
+                    type="checkbox"
+                    name="birthdata"
+                    class="form-checkbox"
+                  />
+                  BIRTHDATE
+                </label>
+
+                <button
+                  class="w-26 flex items-center mx-auto mb-3 rounded-full justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-blue-200 hover:bg-blue-400"
+                  id="apply-button"
+                  onclick="applySettings()"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 sm:ml-16 sm:mt-0 my-auto">
+            <a
+              href="/dashboard/create"
+              class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              Add Student
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 flow-root border-2">
+        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div
+            class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
+          >
+            <table class="min-w-full divide-y divide-gray-300 sortable">
+              <thead>
+                <tr>
+                  <% if (students.some(student => student.studentId)) { %>
+                  <th
+                    id="id-data"
+                    scope="col"
+                    class="cursor-pointer py-3.5 pl-4 pr-3 text-center text-sm font-semibold text-gray-900 sm:pl-0"
+                  >
+                    <a
+                      href="/dashboard?sortby=id&order=<%= orderType %>&columns=<%= colValues %>"
+                      class="block px-4 py-2 text-sm text-gray-700"
+                      role="menuitem"
+                      tabindex="-1"
+                      id="menu-item-2"
+                      >ID &nbsp; <i class="fa-sharp fa-solid fa-sort"></i>
+                    </a>
+                  </th>
+                  <% } %>
+
+                  <th
+                    id="image-data"
+                    scope="col"
+                    class="no-sort cursor-pointer px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
+                  >
+                    IMAGE
+                  </th>
+
+                  <% if (students.some(student => student.firstname)) { %>
+
+                  <th
+                    id="firstname-data"
+                    scope="col"
+                    class="cursor-pointer px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
+                  >
+                    <a
+                      href="/dashboard?sortby=firstname&order=<%= orderType %>&columns=<%= colValues %>"
+                      class="block px-4 py-2 text-sm text-gray-700"
+                      role="menuitem"
+                      tabindex="-1"
+                      id="menu-item-0"
+                      >FIRSTNAME &nbsp; <i class="fa-sharp fa-solid fa-sort"></i
+                    ></a>
+                  </th>
+                  <% } %> <% if (students.some(student => student.lastname)) {
+                  %>
+
+                  <th
+                    id="lastname-data"
+                    scope="col"
+                    class="cursor-pointer px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
+                  >
+                    <a
+                      href="/dashboard?sortby=lastname&order=<%= orderType %>&columns=<%= colValues %>"
+                      class="block px-4 py-2 text-sm text-gray-700"
+                      role="menuitem"
+                      tabindex="-1"
+                      id="menu-item-1"
+                      >LASTNAME &nbsp; <i class="fa-sharp fa-solid fa-sort"></i
+                    ></a>
+                  </th>
+                  <% } %> <% if (students.some(student => student.class)) { %>
+
+                  <th
+                    id="class-data"
+                    scope="col"
+                    class="cursor-pointer px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
+                  >
+                    CLASS &nbsp;
+                  </th>
+                  <% } %> <% if (students.some(student => student.email)) { %>
+
+                  <th
+                    id="email-data"
+                    scope="col"
+                    class="no-sort cursor-pointer px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
+                  >
+                    <a
+                      href="/dashboard?sortby=email&order=<%= orderType %>&columns=<%= colValues %>"
+                      class="block px-4 py-2 text-sm text-gray-700"
+                      role="menuitem"
+                      tabindex="-1"
+                      id="menu-item-2"
+                      >EMAIL &nbsp; <i class="fa-sharp fa-solid fa-sort"></i>
+                    </a>
+                  </th>
+                  <% } %> <% if (students.some(student => student.birthdate)) {
+                  %>
+
+                  <th
+                    id="birthdate-data"
+                    scope="col"
+                    class="no-sort cursor-pointer px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
+                  >
+                    BIRTHDATE
+                  </th>
+                  <% } %>
+
+                  <th
+                    id="actions-data"
+                    scope="col"
+                    class="cursor-pointer px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                  >
+                    ACTIONS
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 bg-white">
+                <%for (let i=0; i < students.length; i++){ %>
+                <tr>
+                  <% if(students[i].studentId) { %>
+
+                  <td
+                    class="whitespace-nowrap text-center py-5 pl-4 pr-3 text-sm sm:pl-0"
+                  >
+                    <div class="text-gray-900">
+                      <%= students[i].studentId %>
+                    </div>
+                  </td>
+                  <% } %>
+                  <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
+                    <div class="h-11 w-11 flex-shrink-0 mx-auto">
+                      <img src="/img/null.png" alt="" />
+                    </div>
+                  </td>
+                  <% if(students[i].firstname) { %>
+                  <td
+                    class="whitespace-nowrap text-center px-3 py-5 text-sm text-gray-500"
+                  >
+                    <div class="text-gray-900">
+                      <%= students[i].firstname %>
+                    </div>
+                  </td>
+                  <% } %> <% if(students[i].lastname) { %>
+
+                  <td
+                    class="whitespace-nowrap text-center px-3 py-5 text-sm text-gray-500"
+                  >
+                    <div class="text-gray-900"><%= students[i].lastname %></div>
+                  </td>
+                  <% } %> <% if(students[i].class) { %>
+                  <td
+                    class="whitespace-nowrap text-center px-3 py-5 text-sm text-gray-500"
+                  >
+                    <div class="text-gray-900"><%= students[i].class %></div>
+                  </td>
+                  <% } %> <% if(students[i].email) { %>
+                  <td
+                    class="whitespace-nowrap text-center py-5 text-sm text-gray-500"
+                  >
+                    <div class="text-gray-900"><%= students[i].email %></div>
+                  </td>
+                  <% } %> <% if(students[i].birthdate) { %>
+                  <td
+                    class="whitespace-nowrap text-center px-3 py-5 text-sm text-gray-500"
+                  >
+                    <div class="text-gray-900">
+                      <%- new
+                      Date(students[i].birthdate).toLocaleDateString('en-GB') %>
+                    </div>
+                  </td>
+                  <% } %>
+
+                  <td
+                    class="relative whitespace-nowrap py-5 pr-4 ml-8 mx-auto text-sm font-medium sm:pr-0 space-x-4"
+                  >
+                    <a href="/dashboard/view/<%= students[i].studentId %>"
+                      ><i class="fa-solid fa-eye text-indigo-800"></i
+                    ></a>
+                    <button
+                      onclick="editUser('<%= students[i].studentId %>', '<%= privil %>')"
+                      class=""
+                    >
+                      <i class="fa-solid fa-pen-to-square text-green-800"></i>
+                    </button>
+
+                    <button
+                      onclick="deleteUser('<%= students[i].studentId %>', '<%= privil %>')"
+                    >
+                      <i class="fa-sharp fa-solid fa-trash text-red-800"></i>
+                    </button>
+                  </td>
+                </tr>
+                <%} %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="pagination" class="mx-auto text-center mt-10 mb-20 space-x-3">
+        <% if (page > 1) { %>
+        <a
+          class="selectedLink border-2 p-1"
+          href="/dashboard?page=1&sortby=<%= sortby %>&columns=<%= colValues %>"
+          >First</a
+        >
+        <a
+          class="selectedLink border-2 p-1"
+          href="/dashboard?page=<%= page - 1 %>&sortby=<%= sortby %>&columns=<%= colValues %>"
+          >Previous</a
+        >
+        <% } %> <% for (let i = iterator; i <= endingLink; i++) { %> <% if (i
+        === page) { %>
+        <visited
+          class=""
+          href="/dashboard?page=<%= i %>&sortby=<%= sortby %>&columns=<%= colValues %>"
+          ><%= i %>
+        </visited>
+        <% } else { %>
+        <a
+          class="selectedLink border-2 p-1"
+          href="/dashboard?page=<%= i %>&sortby=<%= sortby %>&columns=<%= colValues %>"
+          ><%= i %></a
+        >
+        <% } %> <% } %> <% if (page < numOfPages) { %>
+        <a
+          class="selectedLink border-2 p-1"
+          href="/dashboard?page=<%= page + 1 %>&sortby=<%= sortby %>&columns=<%= colValues %>"
+          >Next</a
+        >
+        <a
+          class="selectedLink border-2 p-1"
+          href="/dashboard?page=<%= numOfPages %>&sortby=<%= sortby %>&columns=<%= colValues %>"
+          >Last</a
+        >
+        <% } %>
+      </div>
+    </div>
+  </body>
+</html>

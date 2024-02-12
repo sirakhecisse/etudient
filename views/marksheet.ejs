@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SMS</title>
+    <link rel="icon" href="/img/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
+    <link type="text/css" rel="stylesheet" href="/css/style.css" />
+    <script src="/js/index.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+      integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const loader = document.getElementById("pre-loader")
+        window.addEventListener("beforeunload", () => {
+          loader.style.display = "block"
+        })
+      })
+    </script>
+  </head>
+  <body>
+    <%- include('include/_navbar.ejs') %>
+    <div id="main" class="flex flex-col justify-between mt-10">
+      <div id="top"></div>
+      <div
+        id="current-image"
+        class="flex items-center justify-center space-x-4 my-10"
+      >
+        <img src="/img/null.png" alt="profile-image" width="100" class="" />
+
+        <div id="name">
+          <h1 class="text-5xl text-center font-medium">
+            <%= studentData.firstname + " " + studentData.lastname %>
+          </h1>
+        </div>
+      </div>
+      <div id="bottom" class="mx-60">
+        <header
+          class="flex items-center w-full bg-white dark:bg-dark border-b-2"
+        >
+          <div class="container mx-auto">
+            <div class="relative flex justify-start items-center mx-4">
+              <div>
+                <button
+                  id="navbarToggler"
+                  class="absolute right-4 top-1/2 block -translate-y-1/2 rounded-lg px-3 py-[6px] ring-primary focus:ring-2 lg:hidden"
+                ></button>
+                <header
+                  class="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white text-sm py-4 dark:bg-gray-800"
+                >
+                  <nav
+                    class="max-w-[85rem] w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between"
+                    aria-label="Global"
+                  >
+                    <div
+                      id="navbar-alignment"
+                      class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow sm:block"
+                    >
+                      <div
+                        class="flex flex-col gap-5 mt-5 sm:flex-row sm:items-center sm:mt-0 sm:ps-5"
+                      >
+                        <a
+                          href="/dashboard/view/<%=studentData.studentId %>"
+                          class="font-medium text-blue-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                          aria-current="page"
+                          ><i
+                            class="fa-solid fa-user"
+                            style="color: #0041b3"
+                          ></i>
+                          &nbsp; Personal Info
+                        </a>
+                        <a
+                          class="font-medium text-blue-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                          href="/dashboard/contact/<%=studentData.studentId %>"
+                          aria-current="page"
+                          ><i
+                            class="fa-solid fa-address-book"
+                            style="color: #0040ad"
+                          ></i>
+                          &nbsp;Contact Info</a
+                        >
+                        <a
+                          class="font-medium text-blue-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                          href="/dashboard/student/<%=studentData.studentId %>"
+                          aria-current="page"
+                          ><i
+                            class="fa-solid fa-address-card"
+                            style="color: #003ea8"
+                          ></i>
+                          &nbsp;Student Info</a
+                        >
+                        <visited
+                          class="p-3 rounded-full bg-gray-200 font-medium text-black-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                          ><i
+                            class="fa-solid fa-marker"
+                            style="color: #0043b8"
+                          ></i>
+                          &nbsp;Marksheet</visited
+                        >
+                      </div>
+                    </div>
+                  </nav>
+                </header>
+              </div>
+            </div>
+          </div>
+        </header>
+      </div>
+    </div>
+
+    <div class="mt-8 flow-root border-2 mx-52">
+      <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+          <table class="min-w-full divide-y divide-gray-300">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  scope="col"
+                  class="py-3.5 pl-4 pr-3 text-center text-sm font-semibold text-gray-900 sm:pl-6"
+                >
+                  Subject
+                </th>
+                <th
+                  scope="col"
+                  class="px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
+                >
+                  Marks
+                </th>
+                <th
+                  scope="col"
+                  class="px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
+                >
+                  Grade
+                </th>
+                <th
+                  scope="col"
+                  class="px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
+                >
+                  Grade Point
+                </th>
+                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                  <span class="sr-only">Edit</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+              <tr>
+                <td
+                  class="text-center whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                >
+                  Maths
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= studentData.students_mark[0].maths %>
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= maths.grade %>
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= maths.gpa %>
+                </td>
+              </tr>
+            </tbody>
+            <tbody class="text-center divide-y divide-gray-200 bg-white">
+              <tr>
+                <td
+                  class="text-center whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                >
+                  Physics
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= studentData.students_mark[0].physics %>
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= physics.grade %>
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= physics.gpa %>
+                </td>
+              </tr>
+            </tbody>
+            <tbody class="text-center divide-y divide-gray-200 bg-white">
+              <tr>
+                <td
+                  class="text-center whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                >
+                  Chemistry
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= studentData.students_mark[0].chemistry %>
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= chemistry.grade %>
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= chemistry.gpa %>
+                </td>
+              </tr>
+            </tbody>
+            <tbody class="text-center divide-y divide-gray-200 bg-white">
+              <tr>
+                <td
+                  class="text-center whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                >
+                  Biology
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= studentData.students_mark[0].biology %>
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= biology.grade %>
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= biology.gpa %>
+                </td>
+              </tr>
+            </tbody>
+            <tbody class="text-center divide-y divide-gray-200 bg-white">
+              <tr>
+                <td
+                  class="text-center whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                >
+                  Language
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= studentData.students_mark[0].language %>
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= language.grade %>
+                </td>
+                <td
+                  class="text-center whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                >
+                  <%= language.gpa %>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

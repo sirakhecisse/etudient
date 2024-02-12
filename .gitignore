@@ -1,0 +1,7 @@
+.env
+.prettierrc
+node_modules/
+.vscode/
+package-lock.json
+pnpm-lock.yaml
+.vercel
